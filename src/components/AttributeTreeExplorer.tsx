@@ -21,7 +21,9 @@ function filterForest(nodes: AttributeTreeNode[], q: string): AttributeTreeNode[
   if (!needle) return nodes;
 
   function walk(n: AttributeTreeNode): AttributeTreeNode | null {
-    const selfMatch = n.attribute.toLowerCase().includes(needle);
+    const selfMatch =
+      n.attribute.toLowerCase().includes(needle) ||
+      n._id.toLowerCase().includes(needle);
     const kids = n.children
       .map(walk)
       .filter((x): x is AttributeTreeNode => x !== null);
@@ -220,7 +222,7 @@ export default function AttributeTreeExplorer() {
         <div className="flex flex-wrap items-center gap-2">
           <input
             type="search"
-            placeholder="Filter by name…"
+            placeholder="Filter by name or _id…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="min-w-48 flex-1 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
