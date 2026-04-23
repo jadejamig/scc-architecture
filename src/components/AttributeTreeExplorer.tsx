@@ -194,6 +194,24 @@ export default function AttributeTreeExplorer() {
     return JSON.stringify(attributeNodeToNestedMap(selectedNode), null, 2);
   }, [selectedNode]);
 
+  const fullArchitectureJson = useMemo(
+    () => JSON.stringify(payload?.nested ?? {}, null, 2),
+    [payload?.nested]
+  );
+
+  const [copyFullState, setCopyFullState] = useState<"idle" | "copied" | "error">("idle");
+
+  const copyFullArchitecture = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(fullArchitectureJson);
+      setCopyFullState("copied");
+      window.setTimeout(() => setCopyFullState("idle"), 2000);
+    } catch {
+      setCopyFullState("error");
+      window.setTimeout(() => setCopyFullState("idle"), 2500);
+    }
+  }, [fullArchitectureJson]);
+
   if (loading) {
     return (
       <div className="rounded-xl border border-zinc-200 bg-white p-8 text-center text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
@@ -217,6 +235,7 @@ export default function AttributeTreeExplorer() {
   }
 
   return (
+    <div className="flex flex-col gap-6">
     <div className="grid gap-6 lg:grid-cols-2">
       <div className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
         <div className="flex flex-wrap items-center gap-2">
@@ -295,6 +314,39 @@ export default function AttributeTreeExplorer() {
           </pre>
         </div>
       </div>
+    </div>
+
+      <details className="group rounded-xl border border-zinc-200 bg-white shadow-sm open:shadow-md dark:border-zinc-800 dark:bg-zinc-950">
+        <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-zinc-900 marker:hidden dark:text-zinc-100 [&::-webkit-details-marker]:hidden">
+          <span className="inline-flex items-center gap-2">
+            <span className="text-zinc-500 group-open:rotate-90 transition-transform">▸</span>
+            Full attribute collection architecture (nested JSON)
+          </span>
+          <span className="mt-1 block text-xs font-normal text-zinc-500">
+            Entire tree derived from the <code className="text-[11px]">attribute</code> collection;
+            keys are attribute names, <code className="text-[11px]">child</code> holds descendants.
+          </span>
+        </summary>
+        <div className="border-t border-zinc-200 px-4 py-3 dark:border-zinc-800">
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={copyFullArchitecture}
+              className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+            >
+              Copy JSON
+            </button>
+            {copyFullState === "copied" ? (
+              <span className="text-xs text-emerald-600 dark:text-emerald-400">Copied to clipboard.</span>
+            ) : copyFullState === "error" ? (
+              <span className="text-xs text-red-600 dark:text-red-400">Clipboard unavailable.</span>
+            ) : null}
+          </div>
+          <pre className="max-h-[min(60vh,720px)] overflow-auto rounded-lg bg-zinc-50 p-3 text-[11px] leading-relaxed text-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
+            {fullArchitectureJson}
+          </pre>
+        </div>
+      </details>
     </div>
   );
 }
