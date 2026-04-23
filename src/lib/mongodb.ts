@@ -44,3 +44,16 @@ export function getMongoDbName(): string | undefined {
 export function getAttributeCollectionName(): string {
   return process.env.MONGODB_ATTRIBUTE_COLLECTION ?? "attribute";
 }
+
+export function getDocumentCollectionName(): string {
+  return process.env.MONGODB_DOCUMENT_COLLECTION ?? "document";
+}
+
+export function getDocumentDataCollectionName(): string {
+  return process.env.MONGODB_DOCUMENT_DATA_COLLECTION ?? "document_data";
+}
+
+export function getConversationLogCollectionName(): string {
+  return process.env.MONGODB_CONVERSATION_LOG_COLLECTION ?? "conversation_log";
+}
+

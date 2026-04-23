@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Attribute tree · EAV",
-  description: "Browse MongoDB attribute hierarchy with caching",
+  title: "EAV explorer",
+  description: "Attribute hierarchy and people search on MongoDB",
 };
 
 export default function RootLayout({
