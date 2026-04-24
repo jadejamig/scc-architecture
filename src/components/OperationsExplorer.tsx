@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { readJsonOrThrow, RedirectingToLoginError } from "@/lib/client/http";
 
 type OpId = "create-conversation";
 
@@ -52,6 +53,7 @@ export default function OperationsExplorer() {
     try {
       const res = await fetch("/api/operations/create-conversation", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message,
@@ -70,10 +72,12 @@ export default function OperationsExplorer() {
           subject: subject.trim() || undefined,
         }),
       });
-      const data = (await res.json()) as CreateResult & { error?: string };
-      if (!res.ok) throw new Error(data.error ?? res.statusText);
+      const data = await readJsonOrThrow<CreateResult & { error?: string }>(res);
       setResult(data);
     } catch (err) {
+      if (RedirectingToLoginError.is(err)) {
+        return;
+      }
       setError(err instanceof Error ? err.message : "Request failed");
     } finally {
       setLoading(false);

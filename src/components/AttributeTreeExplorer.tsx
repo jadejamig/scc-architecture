@@ -6,6 +6,11 @@ import {
   type AttributeTreeNode,
   type NestedAttributeMap,
 } from "@/lib/attributes/tree";
+import {
+  apiFetchInit,
+  readJsonOrThrow,
+  RedirectingToLoginError,
+} from "@/lib/client/http";
 
 type TreePayload = {
   forest: AttributeTreeNode[];
@@ -122,11 +127,8 @@ export default function AttributeTreeExplorer() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch("/api/attributes/tree", { cache: "no-store" });
-        const data = (await res.json()) as TreePayload & { error?: string };
-        if (!res.ok) {
-          throw new Error(data.error ?? res.statusText);
-        }
+        const res = await fetch("/api/attributes/tree", apiFetchInit);
+        const data = await readJsonOrThrow<TreePayload>(res);
         if (!cancelled) {
           setPayload({
             forest: data.forest,
@@ -137,6 +139,9 @@ export default function AttributeTreeExplorer() {
           setExpanded(new Set(data.forest.map((r) => r._id)));
         }
       } catch (e) {
+        if (RedirectingToLoginError.is(e)) {
+          return;
+        }
         if (!cancelled) {
           setError(e instanceof Error ? e.message : "Failed to load");
         }
@@ -221,15 +226,20 @@ export default function AttributeTreeExplorer() {
   }
 
   if (error) {
+    const isMongo =
+      /mongo|connect|ETIMEDOUT|ENOTFOUND|authentication failed/i.test(error);
     return (
       <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
-        <p className="font-medium">Could not load from MongoDB.</p>
+        <p className="font-medium">Could not load the attribute tree.</p>
         <p className="mt-2 text-sm">{error}</p>
-        <p className="mt-4 text-sm text-red-700/90 dark:text-red-300/90">
-          Set <code className="rounded bg-red-100 px-1 dark:bg-red-900/60">MONGODB_URI</code> in{" "}
-          <code className="rounded bg-red-100 px-1 dark:bg-red-900/60">.env.local</code> and restart{" "}
-          <code className="rounded bg-red-100 px-1 dark:bg-red-900/60">npm run dev</code>.
-        </p>
+        {isMongo ? (
+          <p className="mt-4 text-sm text-red-700/90 dark:text-red-300/90">
+            Check <code className="rounded bg-red-100 px-1 dark:bg-red-900/60">MONGODB_URI</code> in{" "}
+            <code className="rounded bg-red-100 px-1 dark:bg-red-900/60">.env</code> (or{" "}
+            <code className="rounded bg-red-100 px-1 dark:bg-red-900/60">.env.local</code>) and
+            restart <code className="rounded bg-red-100 px-1 dark:bg-red-900/60">npm run dev</code>.
+          </p>
+        ) : null}
       </div>
     );
   }

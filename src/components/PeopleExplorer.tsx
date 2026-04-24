@@ -1,6 +1,11 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import {
+  apiFetchInit,
+  readJsonOrThrow,
+  RedirectingToLoginError,
+} from "@/lib/client/http";
 
 type PersonListItem = {
   personId: string;
@@ -37,12 +42,14 @@ export default function PeopleExplorer() {
     try {
       const res = await fetch(
         `/api/people/search?q=${encodeURIComponent(q)}`,
-        { cache: "no-store" }
+        apiFetchInit
       );
-      const data = (await res.json()) as { people?: PersonListItem[]; error?: string };
-      if (!res.ok) throw new Error(data.error ?? res.statusText);
+      const data = await readJsonOrThrow<{ people?: PersonListItem[] }>(res);
       setPeople(data.people ?? []);
     } catch (e) {
+      if (RedirectingToLoginError.is(e)) {
+        return;
+      }
       setListError(e instanceof Error ? e.message : "Search failed");
     } finally {
       setListLoading(false);
@@ -54,13 +61,16 @@ export default function PeopleExplorer() {
     setDetailLoading(true);
     setDetail(null);
     try {
-      const res = await fetch(`/api/people/${encodeURIComponent(personId)}`, {
-        cache: "no-store",
-      });
-      const data = (await res.json()) as Record<string, unknown> & { error?: string };
-      if (!res.ok) throw new Error(data.error ?? res.statusText);
+      const res = await fetch(
+        `/api/people/${encodeURIComponent(personId)}`,
+        apiFetchInit
+      );
+      const data = await readJsonOrThrow<Record<string, unknown>>(res);
       setDetail(data);
     } catch (e) {
+      if (RedirectingToLoginError.is(e)) {
+        return;
+      }
       setDetailError(e instanceof Error ? e.message : "Failed to load person");
     } finally {
       setDetailLoading(false);

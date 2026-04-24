@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
+import { userOr401 } from "@/lib/auth/guardApi";
 import { getPersonDetail } from "@/lib/people/fetch";
 
 type Ctx = { params: Promise<{ personId: string }> };
 
 export async function GET(_request: Request, context: Ctx) {
+  const denied = await userOr401();
+  if (denied) {
+    return denied;
+  }
   const { personId } = await context.params;
   if (!ObjectId.isValid(personId)) {
     return NextResponse.json({ error: "Invalid person id" }, { status: 400 });

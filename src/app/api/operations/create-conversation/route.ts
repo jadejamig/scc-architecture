@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
+import { userOr401 } from "@/lib/auth/guardApi";
 import { createClosedAgentConversation } from "@/lib/operations/createClosedConversation";
 
 export async function POST(request: Request) {
+  const denied = await userOr401();
+  if (denied) {
+    return denied;
+  }
   let body: unknown;
   try {
     body = await request.json();

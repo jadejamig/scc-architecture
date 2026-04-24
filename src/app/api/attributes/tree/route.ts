@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { getCachedAttributePayload } from "@/lib/attributes/cache";
+import { userOr401 } from "@/lib/auth/guardApi";
 
 export async function GET() {
+  const denied = await userOr401();
+  if (denied) {
+    return denied;
+  }
   try {
     const payload = await getCachedAttributePayload();
     return NextResponse.json(payload, {
