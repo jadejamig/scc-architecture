@@ -77,13 +77,21 @@ export function buildPersonSearchByIdPipeline(
   ];
 }
 
+/**
+ * Text search: first name, last name, and **email** on `document_data` (email uses
+ * `PERSON_ATTR_EMAIL` / `6909d95ec816ac1c36e43a9f` by default).
+ */
 export function buildPersonSearchByNamePipeline(
   q: string,
   cfg: PeoplePipelineConfig,
   limit: number
 ): Document[] {
   const coll = getDocumentDataCollectionName();
-  const [firstOid, lastOid] = [cfg.personAttrIds[0], cfg.personAttrIds[1]];
+  const [firstOid, lastOid, emailOid] = [
+    cfg.personAttrIds[0],
+    cfg.personAttrIds[1],
+    cfg.personAttrIds[2],
+  ];
   const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const rx = new RegExp(escaped, "i");
 
@@ -93,6 +101,7 @@ export function buildPersonSearchByNamePipeline(
         $or: [
           { attributeId: firstOid, dataValue_text: rx },
           { attributeId: lastOid, dataValue_text: rx },
+          { attributeId: emailOid, dataValue_text: rx },
         ],
       },
     },
